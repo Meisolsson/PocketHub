@@ -1,0 +1,65 @@
+def getPropertyOrDefault(propertyKey, defaultValue) {
+    def value = project.findProperty(propertyKey)
+    return value != null ? value : defaultValue
+}
+
+def addConfigValue(name, isDebug, suffix = "") {
+    def value = (isDebug ? "com.github.debug" : "com.github") + suffix
+
+    android.defaultConfig.buildConfigField "String", name, "\"${value}\""
+    android.defaultConfig.resValue "string", name.toLowerCase(), value
+}
+
+/**
+ * Adds a string variable to the BuildConfig
+ *
+ * @param name The name of the build config variable
+ * @param propertyKey
+ * @param defaultValue
+ * @return True if the property was found or false if the default value was used
+ */
+def addBuildConfigProperty(name, propertyKey, defaultValue) {
+    def value = getPropertyOrDefault(propertyKey, defaultValue)
+
+    android.defaultConfig.buildConfigField "String", name, "\"${value}\""
+    return value != defaultValue
+}
+
+/**
+ * Adds special config values which depend on the build type
+ * @param isDebug True if the build is for debug, false for release
+ */
+def addConfigValues(isDebug) {
+    addConfigValue("ACCOUNT_TYPE", isDebug)
+    addConfigValue("PROVIDER_AUTHORITY_SYNC", isDebug, ".sync")
+    addConfigValue("PROVIDER_AUTHORITY_SEARCH_SUGGEST_ISSUES", isDebug, ".search.suggest.recent.issues")
+    addConfigValue("PROVIDER_AUTHORITY_SEARCH_SUGGEST_REPOS", isDebug, ".search.suggest.recent.repos")
+}
+
+/**
+ * Adds all of the GitHub auth information to BuildConfig and manifest placeholders
+ */
+def addGitHubAuth() {
+    def clientIdIsSet = addBuildConfigProperty("GITHUB_CLIENT_ID", 'pockethub_github_client', "dummy_client")
+    def clientSecretIsSet = addBuildConfigProperty("GITHUB_CLIENT_SECRET", 'pockethub_github_secret', "dummy_secret")
+
+    if (!clientIdIsSet || !clientSecretIsSet) {
+        logger.warn("You won't be able to login, because the oauth client or secret isn't set")
+        logger.warn("Read the README.md: https://github.com/pockethub/PocketHub#setup-environment")
+    }
+
+
+    String oauth = getPropertyOrDefault('pockethub_github_callback', "http://dummy.example.com")
+    String oauthScheme = oauth.split("://")[0]
+    android.defaultConfig.buildConfigField "String", "GITHUB_OAUTH", "\"${oauth}\""
+    android.defaultConfig.buildConfigField "String", "GITHUB_OAUTH_SCHEME", "\"${oauthScheme}\""
+
+    android.defaultConfig.manifestPlaceholders.put("github_oauth", oauth)
+    android.defaultConfig.manifestPlaceholders.put("github_oauth_scheme", oauthScheme)
+}
+
+ext {
+    addGitHubAuth = this.&addGitHubAuth
+    getPropertyOrDefault = this.&getPropertyOrDefault
+    addConfigValues = this.&addConfigValues
+}

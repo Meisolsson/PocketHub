@@ -30,6 +30,7 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebViewClient;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.github.pockethub.android.BuildConfig;
 import com.github.pockethub.android.R;
 import com.github.pockethub.android.ui.WebView;
 
@@ -104,7 +105,7 @@ public class LoginWebViewActivity extends AppCompatActivity {
             }
 
             /**
-             * This method will inject polyfills to the auth javascript if the version is
+             * This method will inject polyfills to the config javascript if the version is
              * below Lollipop. After Lollipop WebView is updated via the Play Store so the polyfills
              * are not needed.
              *
@@ -150,7 +151,7 @@ public class LoginWebViewActivity extends AppCompatActivity {
             }
 
             private boolean overrideOAuth(Uri uri) {
-                if (uri.getScheme().equals(getString(R.string.github_oauth_scheme))) {
+                if (BuildConfig.GITHUB_OAUTH_SCHEME.equals(uri.getScheme())) {
                     Intent data = new Intent();
                     data.setData(uri);
                     setResult(RESULT_OK, data);

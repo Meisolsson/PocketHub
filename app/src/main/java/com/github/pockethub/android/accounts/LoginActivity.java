@@ -72,9 +72,6 @@ public class LoginActivity extends AccountAuthenticatorAppCompatActivity {
     private static final String TAG = "LoginActivity";
 
     private static final long SYNC_PERIOD = TimeUnit.HOURS.toSeconds(8);
-    private String clientId;
-    private String secret;
-    private String redirectUri;
 
     public static void configureSyncFor(Account account) {
         Log.d(TAG, "Configuring account sync");
@@ -97,10 +94,6 @@ public class LoginActivity extends AccountAuthenticatorAppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
 
-        clientId = getString(R.string.github_client);
-        secret = getString(R.string.github_secret);
-        redirectUri = getString(R.string.github_oauth);
-
         accountManager = AccountManager.get(this);
 
         Account[] accounts = accountManager.getAccountsByType(getString(R.string.account_type));
@@ -112,7 +105,8 @@ public class LoginActivity extends AccountAuthenticatorAppCompatActivity {
     }
 
     private void checkOauthConfig() {
-        if (clientId.equals("dummy_client") || secret.equals("dummy_secret")) {
+        if (BuildConfig.GITHUB_CLIENT_ID.equals("dummy_client")
+                || BuildConfig.GITHUB_CLIENT_SECRET.equals("dummy_secret")) {
             Toast.makeText(this, R.string.error_oauth_not_configured, Toast.LENGTH_LONG).show();
         }
     }
@@ -125,13 +119,13 @@ public class LoginActivity extends AccountAuthenticatorAppCompatActivity {
     }
 
     private void onUserLoggedIn(Uri uri) {
-        if (uri != null && uri.getScheme().equals(getString(R.string.github_oauth_scheme))) {
+        if (uri != null && uri.getScheme().equals(BuildConfig.GITHUB_OAUTH_SCHEME)) {
             openLoadingDialog();
             String code = uri.getQueryParameter("code");
             RequestToken request = RequestToken.builder()
-                    .clientId(clientId)
-                    .clientSecret(secret)
-                    .redirectUri(redirectUri)
+                    .clientId(BuildConfig.GITHUB_CLIENT_ID)
+                    .clientSecret(BuildConfig.GITHUB_CLIENT_SECRET)
+                    .redirectUri(BuildConfig.GITHUB_OAUTH)
                     .code(code)
                     .build();
 
@@ -177,7 +171,7 @@ public class LoginActivity extends AccountAuthenticatorAppCompatActivity {
                 .addPathSegment("login")
                 .addPathSegment("oauth")
                 .addPathSegment("authorize")
-                .addQueryParameter("client_id", getString(R.string.github_client))
+                .addQueryParameter("client_id", BuildConfig.GITHUB_CLIENT_ID)
                 .addQueryParameter("scope", initialScope);
 
         Intent intent = new Intent(this, LoginWebViewActivity.class);

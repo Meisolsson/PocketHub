@@ -4,12 +4,7 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.github.ben-manes.versions'   // ./gradlew dependencyUpdates -Drevision=release
 apply from: 'quality.gradle'
-
-repositories {
-    flatDir {
-        dirs 'libs'
-    }
-}
+apply from: 'config.gradle'
 
 // Manifest version information!
 def versionMajor = 0
@@ -19,15 +14,6 @@ def versionBuild = 0 // bump for dogfood builds, public betas, etc.
 
 def isTravis = "true".equals(System.getenv("TRAVIS"))
 def preDexEnabled = "true".equals(System.getProperty("pre-dex", "true"))
-def clientIdIsNotSet = true;
-def clientSecretIsNotSet = true;
-
-def addConfigValues = { name, isDebug, suffix = "" ->
-    def value = (isDebug ? "com.github.debug" : "com.github") + suffix
-
-    android.defaultConfig.buildConfigField "String", name, "\"${value}\""
-    android.defaultConfig.resValue "string", name.toLowerCase(), value
-}
 
 android {
     compileSdkVersion 27
@@ -41,54 +27,15 @@ android {
         versionName "${versionMajor}.${versionMinor}.${versionPatch}"
         vectorDrawables.useSupportLibrary = true
 
-        addConfigValues("ACCOUNT_TYPE", false)
-        addConfigValues("PROVIDER_AUTHORITY_SYNC", false, ".sync")
-        addConfigValues("PROVIDER_AUTHORITY_SEARCH_SUGGEST_ISSUES", false, ".search.suggest.recent.issues")
-        addConfigValues("PROVIDER_AUTHORITY_SEARCH_SUGGEST_REPOS", false, ".search.suggest.recent.repos")
-
-        if (project.hasProperty('pockethub_github_client')) {
-            resValue "string", "github_client", pockethub_github_client
-            clientIdIsNotSet = false
-        } else {
-            resValue "string", "github_client", "dummy_client"
-        }
-
-        if (project.hasProperty('pockethub_github_secret')) {
-            resValue "string", "github_secret", pockethub_github_secret
-            clientSecretIsNotSet = false
-        } else {
-            resValue "string", "github_secret", "dummy_secret"
-        }
-
-        if (clientIdIsNotSet || clientSecretIsNotSet) {
-            logger.warn("You won't be able to login, because the oauth client or secret isn't set")
-            logger.warn("Read the README.md: https://github.com/pockethub/PocketHub#setup-environment")
-        }
-
-        if (project.hasProperty('pockethub_bugsnag_api_key')) {
-            resValue "string", "bugsnag_api_key", pockethub_bugsnag_api_key
-        } else {
-            resValue "string", "bugsnag_api_key", "bugsnag-api-key"
-        }
-
-        String oauth = ""
-        if (project.hasProperty('pockethub_github_callback')) {
-            oauth = pockethub_github_callback
-        } else {
-            oauth = "http://dummy.example.com"
-        }
-
-        resValue "string", "github_oauth", oauth
-        resValue "string", "github_oauth_scheme", oauth.split("://")[0]
+        addGitHubAuth()
+        addConfigValues(false)
+        def apiKey = getPropertyOrDefault("pockethub_bugsnag_api_key", "bugsnag-api-key")
+        manifestPlaceholders.put("bugsnag_api_key", apiKey)
     }
-
 
     buildTypes {
         debug {
-            addConfigValues("ACCOUNT_TYPE", true)
-            addConfigValues("PROVIDER_AUTHORITY_SYNC", true, ".sync")
-            addConfigValues("PROVIDER_AUTHORITY_SEARCH_SUGGEST_ISSUES", true, ".search.suggest.recent.issues")
-            addConfigValues("PROVIDER_AUTHORITY_SEARCH_SUGGEST_REPOS", true, ".search.suggest.recent.repos")
+            addConfigValues(true)
             applicationIdSuffix ".debug"
         }
 

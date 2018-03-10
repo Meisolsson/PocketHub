@@ -255,7 +255,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
-                <data android:scheme="@string/github_oauth_scheme" />
+                <data android:scheme="${github_oauth_scheme}" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
@@ -388,20 +388,8 @@
             android:exported="false" />
 
         <meta-data
-            android:name="com.alorma.github.sdk.client"
-            android:value="@string/github_client"/>
-
-        <meta-data
-            android:name="com.alorma.github.sdk.secret"
-            android:value="@string/github_secret"/>
-
-        <meta-data
-            android:name="com.alorma.github.sdk.oauth"
-            android:value="@string/github_oauth"/>
-
-        <meta-data
             android:name="com.bugsnag.android.API_KEY"
-            android:value="@string/bugsnag_api_key"/>
+            android:value="${bugsnag_api_key}"/>
     </application>
 
 </manifest>
